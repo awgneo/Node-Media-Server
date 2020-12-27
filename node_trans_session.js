@@ -73,7 +73,10 @@ class NodeTransSession extends EventEmitter {
     if (this.conf.vn) {
       Array.prototype.push.apply(argv, ['-vn']);
     }
-    // bitrate
+    // profile and bitrate
+    if (this.conf.ap) {
+      Array.prototype.push.apply(argv, ['-profile:a', this.conf.ap]);
+    }
     if (this.conf.ab) {
       Array.prototype.push.apply(argv, ['-b:a', this.conf.ab]);
     }
