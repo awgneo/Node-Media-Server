@@ -73,6 +73,10 @@ class NodeTransSession extends EventEmitter {
     if (this.conf.vn) {
       Array.prototype.push.apply(argv, ['-vn']);
     }
+    // bitrate
+    if (this.conf.ab) {
+      Array.prototype.push.apply(argv, ['-b:a', this.conf.ab]);
+    }
 
     Array.prototype.push.apply(argv, ['-c:v', vc]);
     Array.prototype.push.apply(argv, this.conf.vcParam);
@@ -84,14 +88,17 @@ class NodeTransSession extends EventEmitter {
     this.ffmpeg_exec = spawn(this.conf.ffmpeg, argv);
     this.ffmpeg_exec.on('error', (e) => {
       Logger.ffdebug(e);
+      console.log(e.message);
     });
 
     this.ffmpeg_exec.stdout.on('data', (data) => {
       Logger.ffdebug(`FF输出：${data}`);
+      console.log(data);
     });
 
     this.ffmpeg_exec.stderr.on('data', (data) => {
       Logger.ffdebug(`FF输出：${data}`);
+      console.log(data);
     });
 
     this.ffmpeg_exec.on('close', (code) => {
