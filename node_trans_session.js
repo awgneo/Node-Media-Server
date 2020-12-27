@@ -50,17 +50,36 @@ class NodeTransSession extends EventEmitter {
     if (this.conf.dash) {
       this.conf.dashFlags = this.conf.dashFlags ? this.conf.dashFlags : '';
       let dashFileName = 'index.mpd';
-      let mapDash = `${this.conf.dashFlags}${ouPath}/${dashFileName}`;
+      let mapDash = `${this.conf.dashFlags}${ouPath}/${dashFileName}|`;
       mapStr += mapDash;
       Logger.log('[Transmuxing DASH] ' + this.conf.streamPath + ' to ' + ouPath + '/' + dashFileName);
     }
+    if (this.conf.segment) {
+      this.conf.segmentFlags = this.conf.segmentFlags ? this.conf.segmentFlags.slice(1, -1) : '';
+      let segmentFileNames = this.conf.segmentFileNames ? this.conf.segmentFileNames : 'index%03d.ts';
+      let segmentFileName = 'index.m3u8';
+      let mapSegment = `[f=segment:segment_list=${ouPath}/${segmentFileName}:segment_list_type=m3u8:${this.conf.segmentFlags}]${ouPath}/${segmentFileNames}|`;
+      mapStr += mapSegment;
+      Logger.log('[Transmuxing SEGMENT] ' + this.conf.streamPath + ' to ' + ouPath + '/' + segmentFileName);
+    }
+
     mkdirp.sync(ouPath);
     let argv = ['-y', '-i', inPath];
+
+    // no audio or video
+    if (this.conf.an) {
+      Array.prototype.push.apply(argv, ['-an']);
+    }
+    if (this.conf.vn) {
+      Array.prototype.push.apply(argv, ['-vn']);
+    }
+
     Array.prototype.push.apply(argv, ['-c:v', vc]);
     Array.prototype.push.apply(argv, this.conf.vcParam);
     Array.prototype.push.apply(argv, ['-c:a', ac]);
     Array.prototype.push.apply(argv, this.conf.acParam);
     Array.prototype.push.apply(argv, ['-f', 'tee', '-map', '0:a?', '-map', '0:v?', mapStr]);
+    console.log(argv);
     argv = argv.filter((n) => { return n }); //去空
     this.ffmpeg_exec = spawn(this.conf.ffmpeg, argv);
     this.ffmpeg_exec.on('error', (e) => {
@@ -85,6 +104,8 @@ class NodeTransSession extends EventEmitter {
               || filename.endsWith('.m3u8')
               || filename.endsWith('.mpd')
               || filename.endsWith('.m4s')
+              || filename.endsWith('.mp3')
+              || filename.endsWith('.mp4')
               || filename.endsWith('.tmp')) {
               fs.unlinkSync(ouPath + '/' + filename);
             }
